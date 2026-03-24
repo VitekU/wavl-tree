@@ -21,11 +21,13 @@ namespace WavlTree {
                     Node(int k, T v, int r) : key(k), value(v), rank(r), leftChild(nullptr), rightChild(nullptr) {}    
             };
 
+            // user functions
             Node* _insertValue(Node* node, Node* newNode);
             Node* _deleteValue(Node* node, int key);
+            Node* _findMax(Node* root);
             void _printTree(Node* node);
-            
 
+            // utility functions
             Node* rotateLeft(Node* x);
             Node* rotateRight(Node* y);
             Node* _findSuccesor(Node* root);
@@ -39,7 +41,7 @@ namespace WavlTree {
             void insertValue(T value, int key);
             void printTree();
             void deleteValue(int key);
-            Node* findSuccersor(Node* root);
+            std::pair<int, int> findMax();
             
     };
 
@@ -93,6 +95,12 @@ namespace WavlTree {
 
         return x;
     }
+
+    template<typename T>
+    std::pair<int, int> WavlTree<T>::findMax() {
+        Node* max = _findMax(root);
+        return {max->value, max->key};
+    }
     
 
     template<typename T>
@@ -131,6 +139,15 @@ namespace WavlTree {
     }
 
     template<typename T>
+    typename WavlTree<T>::Node* WavlTree<T>::_findMax(Node* root) {
+        Node* max = nullptr;
+        while (root != nullptr) {
+            max = root->rightChild;
+        }
+        return max;
+    }
+
+    template<typename T>
     typename WavlTree<T>::Node* WavlTree<T>::_insertValue(Node* node, Node* newNode) {
         if (node == nullptr) {
             return newNode;
@@ -139,7 +156,7 @@ namespace WavlTree {
         if (newNode->key > node->key) {
             node->rightChild = _insertValue(node->rightChild, newNode);
         }
-        else {
+        else if (newNode->key < node->key){
             node->leftChild = _insertValue(node->leftChild, newNode);
         }
 
@@ -188,6 +205,22 @@ namespace WavlTree {
         }
         else if (key < node->key) {
             _deleteValue(node->leftChild, key);
+        }
+        else {
+            if (node->leftChild == nullptr && node->rightChild == nullptr) {
+                delete node;
+                return nullptr;
+            }
+            else if (node->leftChild == nullptr) {
+                Node* right = node->rightChild;
+                delete node;
+                return right;
+            }
+            else if (node->rightChild == nullptr) {
+                Node* left = node->leftChild;
+                delete node;
+                return left;
+            }
         }
     }
 }
