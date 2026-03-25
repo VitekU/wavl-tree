@@ -102,7 +102,6 @@ namespace WavlTree {
         return {max->value, max->key};
     }
     
-
     template<typename T>
     void WavlTree<T>::insertValue(T value, int key) {
         Node* newNode = new Node(key, value, 0);
@@ -139,12 +138,18 @@ namespace WavlTree {
     }
 
     template<typename T>
-    typename WavlTree<T>::Node* WavlTree<T>::_findMax(Node* root) {
-        Node* max = nullptr;
-        while (root != nullptr) {
-            max = root->rightChild;
+    typename WavlTree<T>::Node* WavlTree<T>::_findMax(Node* node) {
+        Node* max = node;
+        while (max->rightChild != nullptr) {
+            max = max->rightChild;
         }
         return max;
+    }
+
+
+    template<typename T>
+    typename WavlTree<T>::Node* WavlTree<T>::_findSuccesor(Node* node) {
+        return _findMax(node->leftChild);
     }
 
     template<typename T>
