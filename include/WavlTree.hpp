@@ -1,9 +1,12 @@
 #include <utility>
 #include <iostream>
+
+#define NODE_TYPE(a, b) std::pair<int, int>{a, b}
+
 namespace WavlTree {
 
     enum NodeType {
-        
+
     };
     
     template<typename T>
@@ -30,9 +33,7 @@ namespace WavlTree {
             // utility functions
             Node* rotateLeft(Node* x);
             Node* rotateRight(Node* y);
-            Node* _findSuccesor(Node* root);
             
-
             std::pair<int, int> calculateNodeType(Node* node);
 
             Node* root;
@@ -49,6 +50,8 @@ namespace WavlTree {
     WavlTree<T>::WavlTree() {
         root = nullptr;
     }
+
+    // utility functions 
 
     template<typename T>
     std::pair<int, int> WavlTree<T>::calculateNodeType(Node* node) {
@@ -69,7 +72,6 @@ namespace WavlTree {
         }
 
         return {left, right};
-
     }
 
     template<typename T>
@@ -96,6 +98,11 @@ namespace WavlTree {
         return x;
     }
 
+
+
+
+    // public interface for the private functions
+
     template<typename T>
     std::pair<int, int> WavlTree<T>::findMax() {
         Node* max = _findMax(root);
@@ -118,6 +125,9 @@ namespace WavlTree {
         _printTree(root);
         std::cout << "Printed whole tree.\n";
     }
+
+
+    // private functions
 
     template<typename T>
     void WavlTree<T>::_printTree(Node* node) {
@@ -146,12 +156,6 @@ namespace WavlTree {
         return max;
     }
 
-
-    template<typename T>
-    typename WavlTree<T>::Node* WavlTree<T>::_findSuccesor(Node* node) {
-        return _findMax(node->leftChild);
-    }
-
     template<typename T>
     typename WavlTree<T>::Node* WavlTree<T>::_insertValue(Node* node, Node* newNode) {
         if (node == nullptr) {
@@ -164,6 +168,8 @@ namespace WavlTree {
         else if (newNode->key < node->key){
             node->leftChild = _insertValue(node->leftChild, newNode);
         }
+
+        // rebalancing after insert
 
         std::pair<int,int> nodeType = calculateNodeType(node);
 
@@ -205,11 +211,16 @@ namespace WavlTree {
 
     template<typename T>
     typename WavlTree<T>::Node* WavlTree<T>::_deleteValue(Node* node, int key) {
+
+        if (node == nullptr) {
+            return node;
+        }
+
         if (key > node->key) {
-            _deleteValue(node->rightChild, key);
+            node->rightChild = _deleteValue(node->rightChild, key);
         }
         else if (key < node->key) {
-            _deleteValue(node->leftChild, key);
+             node->leftChild = _deleteValue(node->leftChild, key);
         }
         else {
             if (node->leftChild == nullptr && node->rightChild == nullptr) {
@@ -226,6 +237,67 @@ namespace WavlTree {
                 delete node;
                 return left;
             }
+            Node* successor = _findMax(node->leftChild);
+
+            node->key = successor->key;
+            node->value = successor->value;
+
+            node->leftChild = _deleteValue(node->leftChild, successor->key);
         }
+
+        // rebalancing after delete
+
+        std::pair<int,int> nodeType = calculateNodeType(node);
+
+
+        // demote
+        if (nodeType == NODE_TYPE(3, 2) || nodeType == NODE_TYPE(2, 3)) {
+            node->rank--;
+        }
+        else if (nodeType == NODE_TYPE(2, 2) && node->leftChild == nullptr && node->rightChild == nullptr) {
+            node->rank--;
+        }
+        else if (nodeType == NODE_TYPE(3, 1)) {
+            std::pair<int,int> oneChildNodeType = calculateNodeType(node->rightChild);
+            
+            if (oneChildNodeType == NODE_TYPE(2, 2)) {
+                node->rank--;
+                node->rightChild->rank--;
+            }
+            else if (oneChildNodeType == NODE_TYPE(1, 1) || oneChildNodeType == NODE_TYPE(2, 1)) {
+                node = rotateLeft(node);
+                node->leftChild->rank--;
+                node->rank++;
+            }
+            else {
+                node->rightChild = rotateRight(node->rightChild);
+                node = rotateLeft(node);
+                node->rank += 2;
+                node->leftChild->rank -= 2;
+                node->rightChild->rank--;
+            }
+        }
+        else if (nodeType == NODE_TYPE(1, 3)) {
+            std::pair<int,int> oneChildNodeType = calculateNodeType(node->leftChild);
+
+            if (oneChildNodeType == NODE_TYPE(2, 2)) {
+                node->rank--;
+                node->leftChild->rank--;
+            }
+            else if (oneChildNodeType == NODE_TYPE(1, 1) || oneChildNodeType == NODE_TYPE(1, 2)) {
+                node = rotateRight(node);
+                node->rightChild->rank--;
+                node->rank++;
+            }
+            else {
+                node->leftChild = rotateLeft(node->leftChild);
+                node = rotateRight(node);
+                node->rank += 2;
+                node->rightChild->rank -= 2;
+                node->rightChild->rank--;
+            }
+        }
+
+        return node;
     }
 }
