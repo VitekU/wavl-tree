@@ -173,17 +173,17 @@ namespace WavlTree {
 
         std::pair<int,int> nodeType = calculateNodeType(node);
 
-        if (nodeType == std::pair<int, int>{1,0} || nodeType == std::pair<int, int>{0,1}) {
+        if (nodeType == NODE_TYPE(1, 0) || nodeType == NODE_TYPE(0,1)) {
             node->rank++;
         }
-        else if (nodeType == std::pair<int, int>{0,2}) {
+        else if (nodeType == NODE_TYPE(0, 2)) {
             std::pair<int, int> zeroChildNodeType = calculateNodeType(node->leftChild);
 
-            if (zeroChildNodeType == std::pair<int, int>{1,1} || zeroChildNodeType == std::pair<int, int>{1,2}) {
+            if (zeroChildNodeType == NODE_TYPE(1, 1) || zeroChildNodeType == NODE_TYPE(1, 2)) {
                 node->rank--;
                 node = rotateRight(node);
             }
-            else if (zeroChildNodeType == std::pair<int, int>{2,1}) {
+            else if (zeroChildNodeType == NODE_TYPE(2, 1)) {
                 node->leftChild = rotateLeft(node->leftChild);
                 node = rotateRight(node);
                 node->rank++;
@@ -191,14 +191,14 @@ namespace WavlTree {
                 node->rightChild->rank--;
             }
         }                
-        else if (nodeType == std::pair<int, int>{2,0}) {
+        else if (nodeType == NODE_TYPE(2, 0)) {
             std::pair<int, int> zeroChildNodeType = calculateNodeType(node->rightChild);
 
-            if (zeroChildNodeType == std::pair<int, int>{1,1} || zeroChildNodeType == std::pair<int, int>{2,1} ) {
+            if (zeroChildNodeType == NODE_TYPE(1, 1) || zeroChildNodeType == NODE_TYPE(2, 1) ) {
                 node->rank--;
                 node = rotateLeft( node);
             }
-            else if (zeroChildNodeType == std::pair<int, int>{1,2}) {
+            else if (zeroChildNodeType == NODE_TYPE(1, 2)) {
                 node->rightChild = rotateRight(node->rightChild);
                 node = rotateLeft(node);
                 node->rank++;
