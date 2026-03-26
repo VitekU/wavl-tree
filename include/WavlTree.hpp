@@ -8,7 +8,6 @@ namespace WavlTree {
     enum NodeType {
 
     };
-    
     template<typename T>
     class WavlTree {
         private:
@@ -37,12 +36,16 @@ namespace WavlTree {
             std::pair<int, int> calculateNodeType(Node* node);
 
             Node* root;
+
+
         public:
             WavlTree();
             void insertValue(T value, int key);
             void printTree();
             void deleteValue(int key);
-            std::pair<int, int> findMax();
+
+            std::pair<T, int> findMax();
+            bool exists(int key);
             
     };
 
@@ -104,19 +107,43 @@ namespace WavlTree {
     // public interface for the private functions
 
     template<typename T>
-    std::pair<int, int> WavlTree<T>::findMax() {
+    std::pair<T, int> WavlTree<T>::findMax() {
         Node* max = _findMax(root);
         return {max->value, max->key};
+    }
+
+    template<typename T>
+    bool WavlTree<T>::exists(int key) {
+        Node* node = root;
+
+        while (node) {
+            if (key == node->key) {
+                return true;
+            }
+            if (key > node->key) {
+                node = node->rightChild;
+            }
+            else if (key < node->key) {
+                node = node->leftChild;
+            }
+        }
+        return false;
     }
     
     template<typename T>
     void WavlTree<T>::insertValue(T value, int key) {
         Node* newNode = new Node(key, value, 0);
+        if (exists(key)) {
+            return;
+        }
         root = _insertValue(root, newNode);
     }
 
     template<typename T>
     void WavlTree<T>::deleteValue(int key) {
+        if (exists(key)) {
+            return;
+        }
         root = _deleteValue(root, key);
     }
 
@@ -194,7 +221,7 @@ namespace WavlTree {
         else if (nodeType == NODE_TYPE(2, 0)) {
             std::pair<int, int> zeroChildNodeType = calculateNodeType(node->rightChild);
 
-            if (zeroChildNodeType == NODE_TYPE(1, 1) || zeroChildNodeType == NODE_TYPE(2, 1) ) {
+            if (zeroChildNodeType == NODE_TYPE(1, 1) || zeroChildNodeType == NODE_TYPE(2, 1)) {
                 node->rank--;
                 node = rotateLeft( node);
             }
@@ -213,7 +240,7 @@ namespace WavlTree {
     typename WavlTree<T>::Node* WavlTree<T>::_deleteValue(Node* node, int key) {
 
         if (node == nullptr) {
-            return node;
+            return nullptr;
         }
 
         if (key > node->key) {
@@ -294,7 +321,7 @@ namespace WavlTree {
                 node = rotateRight(node);
                 node->rank += 2;
                 node->rightChild->rank -= 2;
-                node->rightChild->rank--;
+                node->leftChild->rank--;
             }
         }
 
