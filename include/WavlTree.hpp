@@ -27,6 +27,7 @@ namespace WavlTree {
             Node* _insertValue(Node* node, Node* newNode);
             Node* _deleteValue(Node* node, int key);
             Node* _findMax(Node* root);
+            bool _containsKey(Node* node, int key);
             void _printTree(Node* node);
 
             // utility functions
@@ -45,7 +46,8 @@ namespace WavlTree {
             void deleteValue(int key);
 
             std::pair<T, int> findMax();
-            bool exists(int key);
+            std::pair<T, int> findKey(int key);
+            bool containsKey(int key);
             
     };
 
@@ -113,27 +115,14 @@ namespace WavlTree {
     }
 
     template<typename T>
-    bool WavlTree<T>::exists(int key) {
-        Node* node = root;
-
-        while (node) {
-            if (key == node->key) {
-                return true;
-            }
-            if (key > node->key) {
-                node = node->rightChild;
-            }
-            else if (key < node->key) {
-                node = node->leftChild;
-            }
-        }
-        return false;
+    bool WavlTree<T>::containsKey(int key) {
+        return _containsKey(root, key);
     }
     
     template<typename T>
     void WavlTree<T>::insertValue(T value, int key) {
         Node* newNode = new Node(key, value, 0);
-        if (exists(key)) {
+        if (containsKey(key)) {
             return;
         }
         root = _insertValue(root, newNode);
@@ -141,7 +130,7 @@ namespace WavlTree {
 
     template<typename T>
     void WavlTree<T>::deleteValue(int key) {
-        if (exists(key)) {
+        if (containsKey(key)) {
             return;
         }
         root = _deleteValue(root, key);
@@ -181,6 +170,22 @@ namespace WavlTree {
             max = max->rightChild;
         }
         return max;
+    }
+
+    template<typename T>
+    bool WavlTree<T>::_containsKey(Node* node, int key) {
+        while (node) {
+            if (key == node->key) {
+                return true;
+            }
+            if (key > node->key) {
+                node = node->rightChild;
+            }
+            else if (key < node->key) {
+                node = node->leftChild;
+            }
+        }
+        return false;
     }
 
     template<typename T>
