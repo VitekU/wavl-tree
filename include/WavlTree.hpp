@@ -22,33 +22,33 @@ namespace WavlTree {
 
                     Node(int k, T v, int r) : key(k), value(v), rank(r), leftChild(nullptr), rightChild(nullptr) {}    
             };
+            Node* root;
 
-            // user functions
+            // private user functions
             Node* _insertValue(Node* node, Node* newNode);
             Node* _deleteValue(Node* node, int key);
             Node* _findMax(Node* root);
+            Node* _findMin(Node* root);
+            std::pair<T, int> _findValue(Node* node, int key);
             bool _containsKey(Node* node, int key);
             void _printTree(Node* node);
 
             // utility functions
             Node* rotateLeft(Node* x);
             Node* rotateRight(Node* y);
-            
             std::pair<int, int> calculateNodeType(Node* node);
-
-            Node* root;
-
 
         public:
             WavlTree();
             void insertValue(T value, int key);
-            void printTree();
             void deleteValue(int key);
-
+            
             std::pair<T, int> findMax();
-            std::pair<T, int> findKey(int key);
+            std::pair<T, int> findMin();
+            std::pair<T, int> findValue(int key);
             bool containsKey(int key);
             
+            void printTree();
     };
 
     template<typename T>
@@ -115,6 +115,17 @@ namespace WavlTree {
     }
 
     template<typename T>
+    std::pair<T, int> WavlTree<T>::findMin() {
+        Node* min = _findMin(root);
+        return {min->value, min->key};
+    }
+
+    template<typename T>
+    std::pair<T, int> WavlTree<T>::findValue(int key) {
+        return _findValue(root, key);
+    }
+
+    template<typename T>
     bool WavlTree<T>::containsKey(int key) {
         return _containsKey(root, key);
     }
@@ -173,6 +184,31 @@ namespace WavlTree {
     }
 
     template<typename T>
+    typename WavlTree<T>::Node* WavlTree<T>::_findMin(Node* node) {
+        Node* min = node;
+        while (min->leftChild != nullptr) {
+            min = min->leftChild;
+        }
+        return min;
+    }
+
+    template<typename T>
+    std::pair<T, int> WavlTree<T>::_findValue(Node* node, int key) {
+        while (node) {
+            if (key == node->key) {
+                return {node->value, node->key};
+            }
+            if (key > node->key) {
+                node = node->rightChild;
+            }
+            else if (key < node->key) {
+                node = node->leftChild;
+            }
+        }
+        return {NULL, NULL};
+    }
+
+    template<typename T>
     bool WavlTree<T>::_containsKey(Node* node, int key) {
         while (node) {
             if (key == node->key) {
@@ -187,6 +223,7 @@ namespace WavlTree {
         }
         return false;
     }
+
 
     template<typename T>
     typename WavlTree<T>::Node* WavlTree<T>::_insertValue(Node* node, Node* newNode) {
