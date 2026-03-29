@@ -1,13 +1,13 @@
+#include <algorithm>
+#include <cstddef>
+#include <cstdlib>
+#include <ctime>
 #include <utility>
-#include <iostream>
+#include <optional>
 
 #define NODE_TYPE(a, b) std::pair<int, int>{a, b}
 
 namespace WavlTree {
-
-    enum NodeType {
-
-    };
     template<typename T>
     class WavlTree {
         private:
@@ -18,19 +18,19 @@ namespace WavlTree {
                     Node* rightChild;
                     T value;
                     int rank;
-                    NodeType nodeType;
 
                     Node(int k, T v, int r) : key(k), value(v), rank(r), leftChild(nullptr), rightChild(nullptr) {}    
             };
             Node* root;
 
             // private user functions
-            Node* _insertValue(Node* node, Node* newNode);
-            Node* _deleteValue(Node* node, int key);
+            Node* _insert(Node* node, Node* newNode);
+            Node* _remove(Node* node, int key);
             Node* _findMax(Node* root);
             Node* _findMin(Node* root);
-            std::pair<T, int> _findValue(Node* node, int key);
+            Node* _findValue(Node* node, int key);
             bool _containsKey(Node* node, int key);
+            int _postOrderMaxHeight(Node* node, int depth);
 
             // utility functions
             Node* rotateLeft(Node* x);
@@ -39,13 +39,16 @@ namespace WavlTree {
 
         public:
             WavlTree();
-            void insertValue(T value, int key);
-            void deleteValue(int key);
+            void insert(T value, int key);
+            void remove(int key);
             
-            std::pair<T, int> findMax();
-            std::pair<T, int> findMin();
-            std::pair<T, int> findValue(int key);
+            std::optional<T> findMax();
+            std::optional<T> findMin();
+            std::optional<T> findValue(int key);
             bool containsKey(int key);
+
+            int postOrderMaxHeight();
+            
     };
 
     template<typename T>
@@ -100,26 +103,35 @@ namespace WavlTree {
         return x;
     }
 
-
-
-
     // public interface for the private functions
 
     template<typename T>
-    std::pair<T, int> WavlTree<T>::findMax() {
+    int WavlTree<T>::postOrderMaxHeight() {
+        return _postOrderMaxHeight(root, 0);
+    }
+    
+    template<typename T>
+    std::optional<T> WavlTree<T>::findMax() {
+        if (!root) return std::nullopt;
         Node* max = _findMax(root);
-        return {max->value, max->key};
+        if (max) return max->value;
+        return std::nullopt;
     }
 
     template<typename T>
-    std::pair<T, int> WavlTree<T>::findMin() {
+    std::optional<T> WavlTree<T>::findMin() {
+        if (!root) return std::nullopt;
         Node* min = _findMin(root);
-        return {min->value, min->key};
+        if (min) return min->value;
+        return std::nullopt;
     }
 
     template<typename T>
-    std::pair<T, int> WavlTree<T>::findValue(int key) {
-        return _findValue(root, key);
+    std::optional<T> WavlTree<T>::findValue(int key) {
+        if (!root) return std::nullopt;
+        Node* valueNode = _findValue(root, key);
+        if (valueNode) return valueNode->value;
+        return std::nullopt;
     }
 
     template<typename T>
@@ -128,20 +140,20 @@ namespace WavlTree {
     }
     
     template<typename T>
-    void WavlTree<T>::insertValue(T value, int key) {
+    void WavlTree<T>::insert(T value, int key) {
         Node* newNode = new Node(key, value, 0);
         if (containsKey(key)) {
             return;
         }
-        root = _insertValue(root, newNode);
+        root = _insert(root, newNode);
     }
 
     template<typename T>
-    void WavlTree<T>::deleteValue(int key) {
-        if (containsKey(key)) {
+    void WavlTree<T>::remove(int key) {
+        if (!containsKey(key)) {
             return;
         }
-        root = _deleteValue(root, key);
+        root = _remove(root, key);
     }
 
     // private functions
@@ -165,10 +177,10 @@ namespace WavlTree {
     }
 
     template<typename T>
-    std::pair<T, int> WavlTree<T>::_findValue(Node* node, int key) {
+    typename WavlTree<T>::Node* WavlTree<T>::_findValue(Node* node, int key) {
         while (node) {
             if (key == node->key) {
-                return {node->value, node->key};
+                return node;
             }
             if (key > node->key) {
                 node = node->rightChild;
@@ -177,7 +189,7 @@ namespace WavlTree {
                 node = node->leftChild;
             }
         }
-        return {NULL, NULL};
+        return NULL;
     }
 
     template<typename T>
@@ -196,18 +208,32 @@ namespace WavlTree {
         return false;
     }
 
+    template<typename T>
+    int WavlTree<T>::_postOrderMaxHeight(Node* node, int depth) {
+        int l = depth;
+        int r = depth;
+
+        if (node->leftChild) {
+            l = _postOrderMaxHeight(node->leftChild, depth + 1);
+        }
+        if (node->rightChild) {
+            r = _postOrderMaxHeight(node->rightChild, depth + 1);
+        }
+
+        return std::max(l, r);
+    }
 
     template<typename T>
-    typename WavlTree<T>::Node* WavlTree<T>::_insertValue(Node* node, Node* newNode) {
+    typename WavlTree<T>::Node* WavlTree<T>::_insert(Node* node, Node* newNode) {
         if (node == nullptr) {
             return newNode;
         }
 
         if (newNode->key > node->key) {
-            node->rightChild = _insertValue(node->rightChild, newNode);
+            node->rightChild = _insert(node->rightChild, newNode);
         }
         else if (newNode->key < node->key){
-            node->leftChild = _insertValue(node->leftChild, newNode);
+            node->leftChild = _insert(node->leftChild, newNode);
         }
 
         // rebalancing after insert
@@ -251,17 +277,17 @@ namespace WavlTree {
     };
 
     template<typename T>
-    typename WavlTree<T>::Node* WavlTree<T>::_deleteValue(Node* node, int key) {
+    typename WavlTree<T>::Node* WavlTree<T>::_remove(Node* node, int key) {
 
         if (node == nullptr) {
             return nullptr;
         }
 
         if (key > node->key) {
-            node->rightChild = _deleteValue(node->rightChild, key);
+            node->rightChild = _remove(node->rightChild, key);
         }
         else if (key < node->key) {
-             node->leftChild = _deleteValue(node->leftChild, key);
+             node->leftChild = _remove(node->leftChild, key);
         }
         else {
             if (node->leftChild == nullptr && node->rightChild == nullptr) {
@@ -283,13 +309,12 @@ namespace WavlTree {
             node->key = successor->key;
             node->value = successor->value;
 
-            node->leftChild = _deleteValue(node->leftChild, successor->key);
+            node->leftChild = _remove(node->leftChild, successor->key);
         }
 
         // rebalancing after delete
 
         std::pair<int,int> nodeType = calculateNodeType(node);
-
 
         // demote
         if (nodeType == NODE_TYPE(3, 2) || nodeType == NODE_TYPE(2, 3)) {
@@ -310,7 +335,7 @@ namespace WavlTree {
                 node->leftChild->rank--;
                 node->rank++;
             }
-            else {
+            else if (oneChildNodeType == NODE_TYPE(1, 2)){
                 node->rightChild = rotateRight(node->rightChild);
                 node = rotateLeft(node);
                 node->rank += 2;
@@ -330,7 +355,7 @@ namespace WavlTree {
                 node->rightChild->rank--;
                 node->rank++;
             }
-            else {
+            else if (oneChildNodeType == NODE_TYPE(2, 1)){
                 node->leftChild = rotateLeft(node->leftChild);
                 node = rotateRight(node);
                 node->rank += 2;
@@ -338,7 +363,6 @@ namespace WavlTree {
                 node->leftChild->rank--;
             }
         }
-
         return node;
     }
 }
