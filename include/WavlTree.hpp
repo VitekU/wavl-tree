@@ -21,6 +21,7 @@ namespace WavlTree {
 
                     Node(int k, T v, int r) : key(k), value(v), rank(r), leftChild(nullptr), rightChild(nullptr) {}    
             };
+            int count = 0;
             Node* root;
 
             // private user functions
@@ -48,6 +49,7 @@ namespace WavlTree {
             bool containsKey(int key);
 
             int postOrderMaxHeight();
+            int size();
             
     };
 
@@ -106,6 +108,11 @@ namespace WavlTree {
     // public interface for the private functions
 
     template<typename T>
+    int WavlTree<T>::size() {
+        return count;
+    }
+
+    template<typename T>
     int WavlTree<T>::postOrderMaxHeight() {
         return _postOrderMaxHeight(root, 0);
     }
@@ -142,17 +149,11 @@ namespace WavlTree {
     template<typename T>
     void WavlTree<T>::insert(T value, int key) {
         Node* newNode = new Node(key, value, 0);
-        if (containsKey(key)) {
-            return;
-        }
         root = _insert(root, newNode);
     }
 
     template<typename T>
     void WavlTree<T>::remove(int key) {
-        if (!containsKey(key)) {
-            return;
-        }
         root = _remove(root, key);
     }
 
@@ -226,6 +227,7 @@ namespace WavlTree {
     template<typename T>
     typename WavlTree<T>::Node* WavlTree<T>::_insert(Node* node, Node* newNode) {
         if (node == nullptr) {
+            count++;
             return newNode;
         }
 
@@ -291,25 +293,30 @@ namespace WavlTree {
         }
         else {
             if (node->leftChild == nullptr && node->rightChild == nullptr) {
+                count--;
                 delete node;
                 return nullptr;
             }
             else if (node->leftChild == nullptr) {
+                count--;
                 Node* right = node->rightChild;
                 delete node;
                 return right;
             }
             else if (node->rightChild == nullptr) {
+                count--;
                 Node* left = node->leftChild;
                 delete node;
                 return left;
             }
-            Node* successor = _findMax(node->leftChild);
+            else {
+                Node* successor = _findMax(node->leftChild);
 
-            node->key = successor->key;
-            node->value = successor->value;
+                node->key = successor->key;
+                node->value = successor->value;
 
-            node->leftChild = _remove(node->leftChild, successor->key);
+                node->leftChild = _remove(node->leftChild, successor->key);
+            }
         }
 
         // rebalancing after delete
@@ -335,7 +342,7 @@ namespace WavlTree {
                 node->leftChild->rank--;
                 node->rank++;
             }
-            else if (oneChildNodeType == NODE_TYPE(1, 2)){
+            else if (oneChildNodeType == NODE_TYPE(1, 2)) {
                 node->rightChild = rotateRight(node->rightChild);
                 node = rotateLeft(node);
                 node->rank += 2;
@@ -355,7 +362,7 @@ namespace WavlTree {
                 node->rightChild->rank--;
                 node->rank++;
             }
-            else if (oneChildNodeType == NODE_TYPE(2, 1)){
+            else if (oneChildNodeType == NODE_TYPE(2, 1)) {
                 node->leftChild = rotateLeft(node->leftChild);
                 node = rotateRight(node);
                 node->rank += 2;
