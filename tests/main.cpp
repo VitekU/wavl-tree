@@ -63,5 +63,17 @@ int main() {
         std::cout << max.value().age << " " << max.value().name << "\n";
     }
 
+    // clear tree
+    tree.clear();
+
+    // find max - should return nothing
+    max = tree.findMax();
+    if (max.has_value()) {
+        std::cout << max.value().age << " " << max.value().name << "\n";
+    }
+    else {
+        std::cout << "Tree is empty!\n";
+    }
+
     return 0;
 }
