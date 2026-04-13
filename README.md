@@ -41,8 +41,8 @@ The tests were performed with 1 000 000 inserted elements and 500 000 removal an
 | Operation  |Container | Measured execution time (ms) |
 | --- | --- | --- |
 | `insertion` | `WavlTree`<br>`AVLTree`<br>`std::multiset` | 497<br>2531<br><span style="color: green;">306</span> |
-| `removal` | `WavlTree`<br>`AVLTree`<br>`std::multiset` | <span style="color: green;">68</span><br>81<br>148 |
-| `lookup` | `WavlTree`<br>`AVLTree`<br>`std::multiset` | 493<br>1415<br><span style="color: green;">374</span> |
+| `lookup` | `WavlTree`<br>`AVLTree`<br>`std::multiset` | <span style="color: green;">68</span><br>81<br>148 |
+| `removal` | `WavlTree`<br>`AVLTree`<br>`std::multiset` | 493<br>1415<br><span style="color: green;">374</span> |
 
 As you can see, the WavlTree is almost as good as the STL `multiset` in performing the `insert` and `remove` operations. However in the `lookup` operations, it is significantly - more than two times - better than the `std::multiset` which makes it great for lookup intensive tasks.
 
