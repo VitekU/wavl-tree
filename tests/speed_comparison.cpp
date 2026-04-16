@@ -138,15 +138,41 @@ std::vector<int> alternatingData(int n) {
 
 std::vector<int> shuffleEachSegment(std::vector<int> data, int n, std::mt19937 gen) {
     int segmentSize = data.size() / n;
+    int remainder = data.size() % n;
+
     for (int i = 0; i < n; ++i) {
         std::shuffle(data.begin() + i*segmentSize, data.begin() + (i + 1)*segmentSize, gen);
     }
-    int remainder = data.size() % n;
 
     if (remainder > 0) {
         std::shuffle(data.end() - remainder, data.end(), gen);
     }
     return data;
+}
+
+std::vector<int> shuffleSegments(std::vector<int> data, int n, std::mt19937 gen) {
+    int segmentSize = data.size() / n;
+    int remainder = data.size() % n;
+    std::vector<std::pair<int, int>> blockIndices;
+    
+    for (int i = 0; i < n; ++i) {
+        blockIndices.push_back({i*segmentSize, segmentSize});
+    }
+
+    if (remainder > 0) {
+        blockIndices.push_back({data.size() - remainder, remainder});
+    }
+
+    std::shuffle(blockIndices.begin(), blockIndices.end(), gen);
+
+    std::vector<int> out;
+
+    for (auto block : blockIndices) {
+        for (int i = block.first; i < block.first + block.second; ++i) {
+            out.push_back(data[i]);
+        }
+    }
+    return out;
 }
 
 
@@ -163,22 +189,15 @@ int main() {
     std::random_device rd;
     std::mt19937 gen(rd());
 
-    const int insertCount = 100000;
-    const int removeCount = 50000;
+    const int insertCount = 1000000;
+    const int removeCount = 500000;
+    const int segmentSize = 10000;
 
-    std::vector<int> randomData;
-    for (int i = 0; i < insertCount; ++i) {
-        if (i % 2 == 0) {
-            randomData.push_back(i);
-        }
-        else {
-            randomData.push_back(-i);   
-        }
-    } 
+    auto randomData = sortedData(insertCount);
+    randomData = shuffleSegments(randomData, segmentSize, gen);
 
     std::vector<int> removeElements = randomData;
     std::vector<int> lookupElements = randomData;
-    //std::shuffle(randomData.begin(), removeElements.end(), gen);
     std::shuffle(removeElements.begin(), removeElements.end(), gen);
     std::shuffle(lookupElements.begin(), lookupElements.end(), gen);
 
@@ -197,12 +216,6 @@ int main() {
     printResults("remove", removeResult);
     printResults("remove and insert", removeInsertReult);
 
-    auto data = sortedData(27);
-    data = shuffleEachSegment(data, 5, gen);
-    for (auto e : data) {
-        std::cout << e << " ";
-    }
-    std::cout << "\n";
 
 
     return 0;
