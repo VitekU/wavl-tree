@@ -9,25 +9,140 @@
 
 using namespace std::chrono;
 
+
+#define getMs(x, y) (duration_cast<milliseconds>(x - y).count())
+
+struct timeTest {
+    int wavl;
+    int avl;
+    int multiset; 
+
+    timeTest(int w, int a, int m) : wavl(w), avl(a), multiset(m) {}
+};
+
+WavlTree::WavlTree<int> wavlTree;
+AVLTree<int> avlTree;
+std::multiset<int> multiset;
+
+timeTest testInsert(std::vector<int> data) {
+    auto begWavl = high_resolution_clock::now();
+    for (auto e : data) {
+        wavlTree.insert(e, e);
+    }
+    auto endWavl = high_resolution_clock::now();
+
+    auto begAvl = high_resolution_clock::now();
+    for (auto e : data) {
+        avlTree.insert(e);
+    }
+    auto endAvl = high_resolution_clock::now();
+
+    auto begSet = high_resolution_clock::now();
+    for (auto e : data) {
+        multiset.insert(e);
+    }
+    auto endSet = high_resolution_clock::now();
+
+    return timeTest(getMs(endWavl, begWavl), getMs(endAvl, begAvl), getMs(endSet, begSet));
+}
+
+timeTest testLookup(std::vector<int> data) {
+    auto begWavl = high_resolution_clock::now();
+    for (auto e : data) {
+        wavlTree.findValue(e);
+    }
+    auto endWavl = high_resolution_clock::now();
+
+    auto begAvl = high_resolution_clock::now();
+    for (auto e : data) {
+        avlTree.find(e);
+    }
+    auto endAvl = high_resolution_clock::now();
+
+    auto begSet = high_resolution_clock::now();
+    for (auto e : data) {
+        multiset.find(e);
+    }
+    auto endSet = high_resolution_clock::now();
+
+    return timeTest(getMs(endWavl, begWavl), getMs(endAvl, begAvl), getMs(endSet, begSet));
+}
+
+timeTest testRemove(std::vector<int> data) {
+    auto begWavl = high_resolution_clock::now();
+    for (auto e : data) {
+        wavlTree.remove(e);
+    }
+    auto endWavl = high_resolution_clock::now();
+
+    auto begAvl = high_resolution_clock::now();
+    for (auto e : data) {
+        avlTree.erase(e);
+    }
+    auto endAvl = high_resolution_clock::now();
+
+    auto begSet = high_resolution_clock::now();
+    for (auto e : data) {
+        multiset.erase(e);
+    }
+    auto endSet = high_resolution_clock::now();
+
+    return timeTest(getMs(endWavl, begWavl), getMs(endAvl, begAvl), getMs(endSet, begSet));
+}
+
+timeTest testRemoveInsert(std::vector<int> removeData, std::vector<int> insertData) {
+    auto begWavl = high_resolution_clock::now();
+    for (int i = 0; i < removeData.size(); ++i) {
+        wavlTree.remove(removeData[i]);
+        wavlTree.insert(insertData[i], insertData[i]);
+    }
+    auto endWavl = high_resolution_clock::now();
+
+    auto begAvl = high_resolution_clock::now();
+    for (int i = 0; i < removeData.size(); ++i) {
+        avlTree.erase(removeData[i]);
+        avlTree.insert(insertData[i]);
+    }
+    auto endAvl = high_resolution_clock::now();
+
+    auto begSet = high_resolution_clock::now();
+    for (int i = 0; i < removeData.size(); ++i) {
+        multiset.erase(removeData[i]);
+        multiset.insert(insertData[i]);
+    }
+    auto endSet = high_resolution_clock::now();
+
+    return timeTest(getMs(endWavl, begWavl), getMs(endAvl, begAvl), getMs(endSet, begSet));
+}
+
+void printResults(std::string operation, timeTest result) {
+    std::cout << "WAVL " << operation << " time is: " << result.wavl << "\n"; 
+    std::cout << "AVL " << operation << " time is: " << result.avl << "\n"; 
+    std::cout << "Multiset " << operation << " time is: " << result.multiset << "\n"; 
+    std::cout << "-----------------------------\n";
+}
+
+
 int main() {
     std::random_device rd;
     std::mt19937 gen(rd());
-
-    WavlTree::WavlTree<int> wavlTree;
-    AVLTree<int> avlTree;
-    std::multiset<int> multiset;
 
     const int insertCount = 1000000;
     const int removeCount = 500000;
 
     std::vector<int> randomData;
     for (int i = 0; i < insertCount; ++i) {
-        randomData.push_back(i);
+        if (i % 2 == 0) {
+            randomData.push_back(i);
+        }
+        else {
+            randomData.push_back(-i);   
+        }
     } 
 
     std::vector<int> removeElements = randomData;
     std::vector<int> lookupElements = randomData;
-    std::shuffle(randomData.begin(), removeElements.end(), gen);
+    //std::shuffle(randomData.begin(), removeElements.end(), gen);
     std::shuffle(removeElements.begin(), removeElements.end(), gen);
     std::shuffle(lookupElements.begin(), lookupElements.end(), gen);
 
@@ -35,84 +150,17 @@ int main() {
     lookupElements.resize(removeCount);
     // beginning of the benchmark here
 
-    // wavl insertion time
-    auto begWavlIn = high_resolution_clock::now();
-    for (auto e : randomData) {
-        wavlTree.insert(e, e);
-    }
-    auto endWavlIn = high_resolution_clock::now();
 
-    // wavl lookup time
-    auto begWavlLook = high_resolution_clock::now();
-    for (auto e : randomData) {
-        auto v = wavlTree.findValue(e);
-    }
-    auto endWavlLook = high_resolution_clock::now();
+    auto insertResult = testInsert(randomData);
+    auto lookupResult = testLookup(lookupElements);
+    auto removeResult = testRemove(removeElements);
+    auto removeInsertReult = testRemoveInsert(removeElements, lookupElements);
 
-    // wavl removal time
-    auto begWavlRm = high_resolution_clock::now();
-    for (auto e : removeElements) {
-        wavlTree.remove(e);
-    }
-    auto endWavlRm = high_resolution_clock::now();
+    printResults("insert", insertResult);
+    printResults("lookup", lookupResult);
+    printResults("remove", removeResult);
+    printResults("remove and insert", removeInsertReult);
 
-
-    // avl insertion time
-    auto begAvlIn = high_resolution_clock::now();
-    for (auto e : randomData) {
-        avlTree.insert(e);
-    }
-    auto endAvlIn = high_resolution_clock::now();
-
-    // avl lookup time
-    auto begAvlLook = high_resolution_clock::now();
-    for (auto e : randomData) {
-        avlTree.find(e);
-    }
-    auto endAvlLook = high_resolution_clock::now();
-
-    // avl removal time
-    auto begAvlRm = high_resolution_clock::now();
-    for (auto e : removeElements) {
-        avlTree.erase(e);
-    }
-    auto endAvlRm = high_resolution_clock::now();   
-    
-    // multiset insertion time
-    auto begSetIn = high_resolution_clock::now();
-    for (auto e : randomData) {
-        multiset.insert(e);
-    }
-    auto endSetIn = high_resolution_clock::now();
-
-    // multiset lookup time
-    auto begSetLook = high_resolution_clock::now();
-    for (auto e : randomData) {
-        multiset.find(e);
-    }
-    auto endSetLook = high_resolution_clock::now();
-
-    // multiset removal time
-    auto begSetRm = high_resolution_clock::now();
-    for (auto e : removeElements) {
-        auto it = multiset.find(e);
-        if (it != multiset.end()) {
-            multiset.erase(it); 
-        }
-    }
-    auto endSetRm = high_resolution_clock::now();
-
-    std::cout << "WAVL insertion time is: " << duration_cast<milliseconds>(endWavlIn - begWavlIn).count() << "\n"; 
-    std::cout << "AVL insertion time is: " << duration_cast<milliseconds>(endAvlIn - begAvlIn).count() << "\n";
-    std::cout << "Multiset insertion time is: " << duration_cast<milliseconds>(endSetIn - begSetIn).count() << "\n";  
-    std::cout << "\n";
-    std::cout << "WAVL lookup time is: " << duration_cast<milliseconds>(endWavlLook - begWavlLook).count() << "\n"; 
-    std::cout << "AVL lookup time is: " << duration_cast<milliseconds>(endAvlLook - begAvlLook).count() << "\n"; 
-    std::cout << "Multiset lookup time is: " << duration_cast<milliseconds>(endSetLook - begSetLook).count() << "\n";
-    std::cout << "\n";
-    std::cout << "WAVL removal time is: " << duration_cast<milliseconds>(endWavlRm - begWavlRm).count() << "\n"; 
-    std::cout << "AVL removal time is: " << duration_cast<milliseconds>(endAvlRm - begAvlRm).count() << "\n";
-     std::cout << "Multiset removal time is: " << duration_cast<milliseconds>(endSetRm - begSetRm).count() << "\n";
 
     return 0;
 }
