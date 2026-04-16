@@ -115,6 +115,42 @@ timeTest testRemoveInsert(std::vector<int> removeData, std::vector<int> insertDa
     return timeTest(getMs(endWavl, begWavl), getMs(endAvl, begAvl), getMs(endSet, begSet));
 }
 
+std::vector<int> sortedData(int n) {
+    std::vector<int> out;
+    for (int i = 0; i < n; ++i) {
+        out.push_back(i);
+    }
+    return out;
+} 
+
+std::vector<int> alternatingData(int n) {
+    std::vector<int> out;
+    for (int i = 0; i < n; ++i) {
+        if (i % 2 == 0) {
+            out.push_back(i);
+        }
+        else {
+            out.push_back(-i);
+        }
+    }
+    return out;
+} 
+
+std::vector<int> shuffleEachSegment(std::vector<int> data, int n, std::mt19937 gen) {
+    int segmentSize = data.size() / n;
+    for (int i = 0; i < n; ++i) {
+        std::shuffle(data.begin() + i*segmentSize, data.begin() + (i + 1)*segmentSize, gen);
+    }
+    int remainder = data.size() % n;
+
+    if (remainder > 0) {
+        std::shuffle(data.end() - remainder, data.end(), gen);
+    }
+    return data;
+}
+
+
+
 void printResults(std::string operation, timeTest result) {
     std::cout << "WAVL " << operation << " time is: " << result.wavl << "\n"; 
     std::cout << "AVL " << operation << " time is: " << result.avl << "\n"; 
@@ -127,8 +163,8 @@ int main() {
     std::random_device rd;
     std::mt19937 gen(rd());
 
-    const int insertCount = 1000000;
-    const int removeCount = 500000;
+    const int insertCount = 100000;
+    const int removeCount = 50000;
 
     std::vector<int> randomData;
     for (int i = 0; i < insertCount; ++i) {
@@ -160,6 +196,13 @@ int main() {
     printResults("lookup", lookupResult);
     printResults("remove", removeResult);
     printResults("remove and insert", removeInsertReult);
+
+    auto data = sortedData(27);
+    data = shuffleEachSegment(data, 5, gen);
+    for (auto e : data) {
+        std::cout << e << " ";
+    }
+    std::cout << "\n";
 
 
     return 0;
