@@ -62,7 +62,7 @@ The tests were performed with 1 000 000 inserted elements, 500 000 removal/looku
 | `removal` | `WavlTree`<br>`AVLTree`<br>`std::multiset` | 238<br>1137<br>**148** |
 | `removal and insertion` | `WavlTree`<br>`AVLTree`<br>`std::multiset` | 584<br>2028<br>**306** |
 
-As you can see, the WavlTree is almost as good as the STL `multiset` in performing the `insert` and `remove` operations. However in the `lookup` operations, it is significantly - more than two times - better than the `std::multiset` which makes it great for lookup intensive tasks.
+As you can see, the WavlTree is almost as good as the STL `multiset` in performing the `insert` and `remove` operations. However in the `lookup` operations, it performs significantly - almost two times - than the `std::multiset` which makes it great for lookup intensive tasks.
 
 ## Library Design
 The whole library is essentialy just a one file `WavlTree.hpp`. The reason behind this is the ease of use. You import one file and you have the data structure ready to use. I wanted the library to be contained in a header file and have the ability to work with custom data types, so thats why I'm using `template` throughout the library source code. The code for the library was written entirely by me, and I studied the WAVL tree data structure from the following sources:
