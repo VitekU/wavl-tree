@@ -12,19 +12,27 @@ using namespace std::chrono;
 
 #define getMs(x, y) (duration_cast<milliseconds>(x - y).count())
 
-struct timeTest {
+struct TimeTest {
     int wavl;
     int avl;
     int multiset; 
 
-    timeTest(int w, int a, int m) : wavl(w), avl(a), multiset(m) {}
+    TimeTest(int w, int a, int m) : wavl(w), avl(a), multiset(m) {}
+
+    TimeTest operator+(const TimeTest other) {
+        return TimeTest(wavl + other.wavl, avl + other.avl, multiset + other.multiset);
+    }
+
+    TimeTest operator/(const int n) {
+        return TimeTest(wavl / n, avl / n, multiset / n);
+    }
 };
 
 WavlTree::WavlTree<int> wavlTree;
 AVLTree<int> avlTree;
 std::multiset<int> multiset;
 
-timeTest testInsert(std::vector<int> data) {
+TimeTest testInsert(std::vector<int> data) {
     auto begWavl = high_resolution_clock::now();
     for (auto e : data) {
         wavlTree.insert(e, e);
@@ -43,10 +51,10 @@ timeTest testInsert(std::vector<int> data) {
     }
     auto endSet = high_resolution_clock::now();
 
-    return timeTest(getMs(endWavl, begWavl), getMs(endAvl, begAvl), getMs(endSet, begSet));
+    return TimeTest(getMs(endWavl, begWavl), getMs(endAvl, begAvl), getMs(endSet, begSet));
 }
 
-timeTest testLookup(std::vector<int> data) {
+TimeTest testLookup(std::vector<int> data) {
     auto begWavl = high_resolution_clock::now();
     for (auto e : data) {
         wavlTree.findValue(e);
@@ -65,10 +73,10 @@ timeTest testLookup(std::vector<int> data) {
     }
     auto endSet = high_resolution_clock::now();
 
-    return timeTest(getMs(endWavl, begWavl), getMs(endAvl, begAvl), getMs(endSet, begSet));
+    return TimeTest(getMs(endWavl, begWavl), getMs(endAvl, begAvl), getMs(endSet, begSet));
 }
 
-timeTest testRemove(std::vector<int> data) {
+TimeTest testRemove(std::vector<int> data) {
     auto begWavl = high_resolution_clock::now();
     for (auto e : data) {
         wavlTree.remove(e);
@@ -87,10 +95,10 @@ timeTest testRemove(std::vector<int> data) {
     }
     auto endSet = high_resolution_clock::now();
 
-    return timeTest(getMs(endWavl, begWavl), getMs(endAvl, begAvl), getMs(endSet, begSet));
+    return TimeTest(getMs(endWavl, begWavl), getMs(endAvl, begAvl), getMs(endSet, begSet));
 }
 
-timeTest testRemoveInsert(std::vector<int> removeData, std::vector<int> insertData) {
+TimeTest testRemoveInsert(std::vector<int> removeData, std::vector<int> insertData) {
     auto begWavl = high_resolution_clock::now();
     for (int i = 0; i < removeData.size(); ++i) {
         wavlTree.remove(removeData[i]);
@@ -112,7 +120,7 @@ timeTest testRemoveInsert(std::vector<int> removeData, std::vector<int> insertDa
     }
     auto endSet = high_resolution_clock::now();
 
-    return timeTest(getMs(endWavl, begWavl), getMs(endAvl, begAvl), getMs(endSet, begSet));
+    return TimeTest(getMs(endWavl, begWavl), getMs(endAvl, begAvl), getMs(endSet, begSet));
 }
 
 std::vector<int> sortedData(int n) {
@@ -175,13 +183,33 @@ std::vector<int> shuffleSegments(std::vector<int> data, int n, std::mt19937 gen)
     return out;
 }
 
-
-
-void printResults(std::string operation, timeTest result) {
+void printResults(std::string operation, TimeTest result) {
     std::cout << "WAVL " << operation << " time is: " << result.wavl << "\n"; 
     std::cout << "AVL " << operation << " time is: " << result.avl << "\n"; 
     std::cout << "Multiset " << operation << " time is: " << result.multiset << "\n"; 
     std::cout << "-----------------------------\n";
+}
+
+void testWithData(std::vector<int> insertData, std::vector<int> lookupData, std::vector<int> removeData, TimeTest& insertAvg, TimeTest& lookupAvg, TimeTest& removeAvg, TimeTest& removeInsertAvg) {
+    auto insertResult = testInsert(insertData);
+    auto lookupResult = testLookup(lookupData);
+    auto removeResult = testRemove(removeData);
+    auto removeInsertResult = testRemoveInsert(lookupData, removeData);
+
+    insertAvg = insertAvg + insertResult;
+    lookupAvg = lookupAvg + lookupResult;
+    removeAvg = removeAvg + removeResult;
+    removeInsertAvg = removeInsertAvg + removeInsertResult;
+
+    printResults("insert", insertResult);
+    printResults("lookup", lookupResult);
+    printResults("remove", removeResult);
+    printResults("remove and insert", removeInsertResult);
+    std::cout << "\n\n";
+
+    wavlTree.clear();
+    avlTree.clear();
+    multiset.clear();
 }
 
 
@@ -191,32 +219,86 @@ int main() {
 
     const int insertCount = 1000000;
     const int removeCount = 500000;
+    const int lookupCount = 500000;
     const int segmentSize = 10000;
 
-    auto randomData = sortedData(insertCount);
-    randomData = shuffleSegments(randomData, segmentSize, gen);
+    const int numberOfTests = 6;
 
-    std::vector<int> removeElements = randomData;
-    std::vector<int> lookupElements = randomData;
-    std::shuffle(removeElements.begin(), removeElements.end(), gen);
-    std::shuffle(lookupElements.begin(), lookupElements.end(), gen);
+    std::vector<int> randomData;
+   
+    std::vector<int> removeData;
+    std::vector<int> lookupData;
 
-    removeElements.resize(removeCount);
-    lookupElements.resize(removeCount);
+    TimeTest insertAvg = TimeTest(0, 0, 0);
+    TimeTest lookupAvg = TimeTest(0, 0, 0);
+    TimeTest removeAvg = TimeTest(0, 0, 0);
+    TimeTest removeInsertAvg = TimeTest(0, 0, 0);
+
     // beginning of the benchmark here
 
+    // sorted data
+    std::cout << "SORTED - ALL\n";
+    std::cout << "-----------------------------\n";
 
-    auto insertResult = testInsert(randomData);
-    auto lookupResult = testLookup(lookupElements);
-    auto removeResult = testRemove(removeElements);
-    auto removeInsertReult = testRemoveInsert(removeElements, lookupElements);
+    randomData = sortedData(insertCount);
+    removeData = sortedData(removeCount);
+    lookupData = sortedData(lookupCount);
 
-    printResults("insert", insertResult);
-    printResults("lookup", lookupResult);
-    printResults("remove", removeResult);
-    printResults("remove and insert", removeInsertReult);
+    testWithData(randomData, lookupData, removeData, insertAvg, lookupAvg, removeAvg, removeInsertAvg);
 
+    // shuffle segments on insert
+    std::cout << "SHUFFLED BLOCKS - ONLY INSERT\n";
+    std::cout << "-----------------------------\n";
 
+    randomData = shuffleSegments(randomData, segmentSize, gen);
 
+    testWithData(randomData, lookupData, removeData, insertAvg, lookupAvg, removeAvg, removeInsertAvg);
+
+    // shuffle segments in all datasets
+    std::cout << "SHUFFLED BLOCKS - ALL\n";
+    std::cout << "-----------------------------\n";
+    lookupData = shuffleSegments(lookupData, segmentSize, gen);
+    removeData = shuffleSegments(removeData, segmentSize, gen);
+
+    testWithData(randomData, lookupData, removeData, insertAvg, lookupAvg, removeAvg, removeInsertAvg);
+
+    // shuffle each segment separately on insert
+    std::cout << "SHUFFLED EACH BLOCK - ONLY INSERT\n";
+    std::cout << "-----------------------------\n";
+    randomData = shuffleEachSegment(sortedData(insertCount), segmentSize, gen);
+    removeData = sortedData(removeCount);
+    lookupData = sortedData(lookupCount);
+
+    testWithData(randomData, lookupData, removeData, insertAvg, lookupAvg, removeAvg, removeInsertAvg);
+
+    // shuffle each segment separately in all datasets
+    std::cout << "SHUFFLED EACH BLOCK - ALL\n";
+    std::cout << "-----------------------------\n";
+    removeData = shuffleEachSegment(removeData, segmentSize, gen);
+    lookupData = shuffleEachSegment(lookupData, segmentSize, gen);
+
+    testWithData(randomData, lookupData, removeData, insertAvg, lookupAvg, removeAvg, removeInsertAvg);
+
+    // alternating data
+    std::cout << "ALTERNATE - ALL\n";
+    std::cout << "-----------------------------\n";
+    randomData = alternatingData(insertCount);
+    removeData = alternatingData(removeCount);
+    lookupData = alternatingData(lookupCount);
+
+    testWithData(randomData, lookupData, removeData, insertAvg, lookupAvg, removeAvg, removeInsertAvg);
+
+    // average times
+    std::cout << "AVERAGE TIMES\n";
+    std::cout << "-----------------------------\n";
+    insertAvg = insertAvg / numberOfTests;
+    lookupAvg = lookupAvg / numberOfTests;
+    removeAvg = removeAvg / numberOfTests;
+    removeInsertAvg = removeInsertAvg / numberOfTests;
+
+    printResults("insert", insertAvg);
+    printResults("lookup", lookupAvg);
+    printResults("remove", removeAvg);
+    printResults("remove and insert", removeInsertAvg);
     return 0;
 }
