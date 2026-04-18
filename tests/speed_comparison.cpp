@@ -218,8 +218,8 @@ int main() {
     std::mt19937 gen(rd());
 
     const int insertCount = 1000000;
-    const int removeCount = 500000;
     const int lookupCount = 500000;
+    const int removeCount = 500000;
     const int segmentSize = 10000;
 
     const int numberOfTests = 6;

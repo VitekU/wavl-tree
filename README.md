@@ -35,14 +35,32 @@ My implementation supports storing custom data types in the tree, however each v
 This tree was proposed as an alternative with better performance in some scenarios then other self balancing trees, such as AVL or RedBlack trees.
 
 I've decided to test my implementation against [this](https://github.com/KadirEmreOto/AVL-Tree/tree/master) implementation of and AVL tree and C++ STL implementation of the Red Black tree, `std::multiset`. The tests for the speed comparison are contained in the file `tests/speed_comparison`.
+
+I've tested my implementation with various types of datasets that represent some the worst cases for datas structures to deal with. 
+With each dataset I had the structures perform the following operations in this exact order.
+- insert
+- lookup
+- remove
+- remove and right after insert another element
+
+### Datasets
+- sorted elements
+- sorted elements divided into blocks that were then randomly shuffled - only insertion
+- sorted elements divided into blocks that were then randomly shuffled - both insertion and lookup/removalx
+- sorted elements divided into blocks and elements in each block were randomly shuffled - only insertion
+- sorted elements divided into blocks and elements in each block were randomly shuffled - both insertion and lookup/removal
+- alternating elements - sorted elements alternate with `+/-` signs
+
+I've also calculated the respective averages from the results, and the those averages are the results displayed below. There were no significant deviation in the measured time performance which means that the WAVL tree handled the situations as it was supposed to.
 ___
-The tests were performed with 1 000 000 inserted elements and 500 000 removal and lookup operations.
+The tests were performed with 1 000 000 inserted elements, 500 000 removal/lookup operations and with blocks each containing 10 000 elements.
 ### Results
 | Operation  |Container | Measured execution time (ms) |
 | --- | --- | --- |
-| `insertion` | `WavlTree`<br>`AVLTree`<br>`std::multiset` | 497<br>2531<br><span style="color: green;">306</span> |
-| `lookup` | `WavlTree`<br>`AVLTree`<br>`std::multiset` | <span style="color: green;">68</span><br>81<br>148 |
-| `removal` | `WavlTree`<br>`AVLTree`<br>`std::multiset` | 493<br>1415<br><span style="color: green;">374</span> |
+| `insertion` | `WavlTree`<br>`AVLTree`<br>`std::multiset` | 512<br>2600<br>**293** |
+| `lookup` | `WavlTree`<br>`AVLTree`<br>`std::multiset` | **36**<br>38<br>74 |
+| `removal` | `WavlTree`<br>`AVLTree`<br>`std::multiset` | 238<br>1137<br>**148** |
+| `removal and insertion` | `WavlTree`<br>`AVLTree`<br>`std::multiset` | 584<br>2028<br>**306** |
 
 As you can see, the WavlTree is almost as good as the STL `multiset` in performing the `insert` and `remove` operations. However in the `lookup` operations, it is significantly - more than two times - better than the `std::multiset` which makes it great for lookup intensive tasks.
 
