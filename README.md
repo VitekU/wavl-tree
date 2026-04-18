@@ -36,7 +36,7 @@ This tree was proposed as an alternative with better performance in some scenari
 
 I've decided to test my implementation against [this](https://github.com/KadirEmreOto/AVL-Tree/tree/master) implementation of and AVL tree and C++ STL implementation of the Red Black tree, `std::multiset`. The tests for the speed comparison are contained in the file `tests/speed_comparison`.
 
-I've tested my implementation with various types of datasets that represent some the worst cases for datas structures to deal with. 
+I've tested my implementation with various types of datasets that represent some of the worst cases for this type of data structure to deal with. 
 With each dataset I had the structures perform the following operations in this exact order.
 - insert
 - lookup
@@ -46,7 +46,7 @@ With each dataset I had the structures perform the following operations in this 
 ### Datasets
 - sorted elements
 - sorted elements divided into blocks that were then randomly shuffled - only insertion
-- sorted elements divided into blocks that were then randomly shuffled - both insertion and lookup/removalx
+- sorted elements divided into blocks that were then randomly shuffled - both insertion and lookup/removal
 - sorted elements divided into blocks and elements in each block were randomly shuffled - only insertion
 - sorted elements divided into blocks and elements in each block were randomly shuffled - both insertion and lookup/removal
 - alternating elements - sorted elements alternate with `+/-` signs
